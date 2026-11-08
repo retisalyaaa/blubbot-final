@@ -19,3 +19,5 @@ while True:
         print(f"      [intent: {hasil['intent']} | skor {hasil['score']}]")
         for skor, tag, pola in bot.scores(pesan)[:3]:
             print(f"      - {tag:<18} {skor:.2f}  pola: \"{pola}\"")
+
+# coba dulu di CLI
