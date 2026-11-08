@@ -71,6 +71,9 @@
      "patterns": ["dosis obat ikan", "obat ikan", "kasih antibiotik", "garam ikan berapa", "obat campur"],
      "responses": ["Maaf, aku tidak bisa menentukan dosis karena tergantung jenis obat dan volume air. Ikuti petunjuk kemasan, jangan campur beberapa obat sekaligus, dan tanyakan ke dokter hewan atau ahli ikan.",
                    "Aku tidak bisa menyebut dosis karena bergantung pada obat dan jumlah air. Baca aturan pakai di kemasan, jangan campur beberapa obat, dan konsultasikan ke dokter hewan atau penjual ikan terpercaya."]},
+    {"tag": "kondisi_ikan",
+      "patterns": ["ikan diem", "ikan lemes", "ikan lesu"],
+      "responses": ["Ikan kamu kekurangan oksigen", "Pindahkan ke akuarium lain agar ikan tidak stress."]}
     {"tag": "terima_kasih",
      "patterns": ["makasih", "terima kasih", "thanks", "thx", "oke sip", "okei makasi ya"],
      "responses": ["Sama-sama! Semoga ikanmu sehat dan betah di akuarium.",
