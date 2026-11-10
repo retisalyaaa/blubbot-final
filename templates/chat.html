@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}{{ theme.bot_name }}{% endblock %}
+{% block content %}
+<header>
+  <div>
+    <h1>🐟 {{ theme.bot_name }}</h1>
+    <p>{{ theme.subtitle }}</p>
+  </div>
+  <button id="clear-btn" type="button" class="ghost">Hapus riwayat</button>
+</header>
+
+<div id="messages" data-greeting="{{ theme.greeting }}"></div>
+
+<div id="suggestions">
+  {% for s in theme.suggestions %}
+  <button type="button" class="chip">{{ s }}</button>
+  {% endfor %}
+</div>
+
+<form id="chat-form">
+  <input id="chat-input" autocomplete="off" maxlength="500"
+         placeholder="Tanya soal ikanmu...">
+  <button type="submit">Kirim</button>
+</form>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+{% endblock %}
