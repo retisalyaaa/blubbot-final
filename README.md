@@ -75,7 +75,7 @@ http://127.0.0.1:5000
 ```
 ## Preview BlubBot
 <p align="center">
-  <img src="screenshot/chatbot.png"
+  <img src="./screenshot/chatbot.png"
        alt="BlubBot Preview"
        width="800">
 </p>
