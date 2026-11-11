@@ -1,23 +1,54 @@
-import sys
+"""
+Chat dengan bot langsung di terminal, tanpa browser.
 
-from chatbot.engine import ChatbotEngine, load_theme
+Contoh:
+    python cli.py                  # tema ikan (BlubBot)
+    python cli.py --tema ikan
+    python cli.py --debug          # tampilkan 3 kandidat intent teratas
+Ketik 'keluar' untuk berhenti.
+"""
+import argparse
+from pathlib import Path
 
-theme = load_theme("themes/ikan.json")
-bot = ChatbotEngine(theme)
-debug = "--debug" in sys.argv
+from chatbot import ChatbotEngine, load_themes
 
-print(f"{theme['bot_name']}: {theme['greeting']}  (ketik 'keluar' untuk berhenti)")
-while True:
-    pesan = input("Anda: ").strip()
-    if pesan.lower() == "keluar":
-        break
-    if not pesan:
-        continue
-    hasil = bot.reply(pesan)
-    print("Bot :", hasil["reply"])
-    if debug:
-        print(f"      [intent: {hasil['intent']} | skor {hasil['score']}]")
-        for skor, tag, pola in bot.scores(pesan)[:3]:
-            print(f"      - {tag:<18} {skor:.2f}  pola: \"{pola}\"")
+BASE_DIR = Path(__file__).resolve().parent
 
-# coba dulu di CLI
+
+def main():
+    parser = argparse.ArgumentParser(description="Chatbot tematik di terminal")
+    parser.add_argument("--tema", default="ikan", help="id tema (nama file JSON tanpa .json)")
+    parser.add_argument("--ambang", type=float, default=0.45, help="ambang batas skor")
+    parser.add_argument("--debug", action="store_true", help="tampilkan kandidat intent")
+    args = parser.parse_args()
+
+    themes = load_themes(BASE_DIR / "themes")
+    if args.tema not in themes:
+        print(f"Tema '{args.tema}' tidak ada. Pilihan: {', '.join(themes)}")
+        return
+    theme = themes[args.tema]
+    bot = ChatbotEngine(theme, args.ambang)
+
+    print(f"{theme['avatar']} {theme['bot_name']}: {theme['greeting']}")
+    print("(ketik 'keluar' untuk berhenti)\n")
+    while True:
+        try:
+            pesan = input("Anda: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            break
+        if pesan.lower() in {"keluar", "exit", "quit"}:
+            break
+        hasil = bot.reply(pesan)
+        print(f"{theme['bot_name']}: {hasil['reply']}")
+        label = hasil["intent"] or "tidak dikenali"
+        print(f"   [intent: {label} · skor {hasil['score']:.2f}]")
+        if args.debug:
+            for i, k in enumerate(bot.explain(pesan), 1):
+                print(f"   {i}. {k['intent']:<18} {k['score']:.2f}  pola: \"{k['pattern']}\"")
+        print()
+    print("Sampai jumpa!")
+
+
+if __name__ == "__main__":
+    main()

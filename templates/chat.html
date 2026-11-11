@@ -1,23 +1,29 @@
 {% extends "base.html" %}
-{% block title %}{{ theme.bot_name }}{% endblock %}
+{# URL logo tema (kosong bila tema tidak punya logo); dipakai di blok content dan scripts #}
+{% set logo = url_for('static', filename=theme.logo) if theme.logo else '' %}
+
+{% block title %}{{ theme.bot_name }} &middot; {{ theme.name }}{% endblock %}
+{% block color %}{{ theme.color }}{% endblock %}
+
 {% block content %}
-{% set logo = url_for('static', filename='img/logo.svg') %}
 <div class="app">
   <aside class="side">
     <section class="hero">
-      <img class="hero-logo" src="{{ logo }}" alt="Logo BlubBot: ikan lucu di dalam akuarium">
+      {% if logo %}<img class="hero-logo" src="{{ logo }}" alt="Logo {{ theme.bot_name }}: ikan lucu di dalam akuarium">
+      {% else %}<div class="hero-emoji">{{ theme.avatar }}</div>{% endif %}
       <p class="eyebrow">Halo, teman ikan!</p>
       <h1>{{ theme.bot_name }}</h1>
-      <p class="hero-sub">{{ theme.subtitle }}</p>
+      <p class="hero-sub">{{ theme.subtitle or theme.name }}</p>
       <button type="button" id="start-btn" class="btn-orange">Mulai tanya</button>
     </section>
 
+    <!-- Saran pertanyaan cepat -->
     <section class="popular">
       <h2>Pertanyaan populer</h2>
       <div id="suggestions">
         {% for s in theme.suggestions %}
-        <button type="button" class="tip" data-q="{{ s }}">
-          <img src="{{ logo }}" alt="" class="tip-icon">
+        <button type="button" class="tip">
+          {% if logo %}<img src="{{ logo }}" alt="" class="tip-icon">{% endif %}
           <span>{{ s }}</span>
           <i class="tip-arrow" aria-hidden="true">›</i>
         </button>
@@ -28,18 +34,22 @@
 
   <section class="chat">
     <header class="chat-head">
-      <img class="avatar" src="{{ logo }}" alt="">
+      {% if logo %}<img class="avatar" src="{{ logo }}" alt="">{% else %}<div class="avatar">{{ theme.avatar }}</div>{% endif %}
       <div class="who">
         <strong>{{ theme.bot_name }}</strong>
-        <span class="status"><i class="dot"></i> Online · {{ theme.subtitle }}</span>
+        <span class="status"><i class="dot"></i> Online &middot; {{ theme.name }}</span>
       </div>
-      <button id="clear-btn" type="button" class="ghost">Hapus riwayat</button>
+      <label class="learn-toggle">
+        <input type="checkbox" id="learn-mode"> Mode belajar
+      </label>
+      <button id="btn-clear" type="button" class="ghost">Hapus riwayat</button>
     </header>
 
-    <div id="messages" data-greeting="{{ theme.greeting }}" data-avatar="{{ logo }}" aria-live="polite"></div>
+    <!-- Area pesan: diisi oleh JavaScript -->
+    <div id="messages" aria-live="polite"></div>
 
     <form id="chat-form" autocomplete="off">
-      <input id="chat-input" maxlength="500" placeholder="Tanya soal ikanmu di sini..." aria-label="Pesan">
+      <input id="chat-input" type="text" maxlength="500" placeholder="Tanya soal ikanmu di sini..." aria-label="Pesan" required>
       <button type="submit" class="send" aria-label="Kirim">
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </button>
@@ -47,6 +57,16 @@
   </section>
 </div>
 {% endblock %}
+
 {% block scripts %}
+<script>
+  // Data dari server (Jinja2) diteruskan ke JavaScript dengan filter tojson
+  const THEME = {
+    id: {{ theme.id | tojson }},
+    avatar: {{ theme.avatar | tojson }},
+    logo: {{ logo | tojson }},
+    greeting: {{ theme.greeting | tojson }}
+  };
+</script>
 <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 {% endblock %}

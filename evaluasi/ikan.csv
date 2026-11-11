@@ -1,31 +1,41 @@
 kalimat,intent
-halo bot,greeting
-selamat pagi blubbot,greeting
-bot ini bisa apa aja,tentang_bot
-ikan apa yang gampang dipelihara pemula,pilih_ikan_pemula
-aku baru mau pelihara ikan hias bagusnya apa,pilih_ikan_pemula
-akuarium 10 liter cukup buat cupang gak,ukuran_akuarium
-gmn ukuran wadah yang pas buat guppy,ukuran_akuarium
-ikan dikasih makan berapa kali sehari,jadwal_makan
-kapan waktu yang tepat kasih makan ikan,jadwal_makan
-pelet apa yang bagus buat cupang,jenis_pakan
-boleh gak ikan dikasih cacing sutra,jenis_pakan
-seminggu berapa kali ganti air akuarium,ganti_air
-airnya perlu dikuras semua gak,ganti_air
-boleh pakai air keran langsung,air_keran
-air pdam aman buat ikan ga,air_keran
-kenapa airnya jadi hijau,air_keruh
-air akuarium keruh banget,air_keruh
-suhu air yang bagus berapa derajat,suhu_air
-airnya kepanasan gmn,suhu_air
-ikan naik terus ke permukaan,ikan_megap_megap
-ikan susah bernapas,ikan_megap_megap
-badan ikan ada bintik putih,bintik_putih
-ikan kena white spot gimana,bintik_putih
-boleh gak cupang dicampur sama guppy,campur_ikan
-dosis obat buat ikan sakit berapa,tanya_obat_dosis
-terima kasih banyak,terima_kasih
+halo blubbot,greeting
+selamat sore bot,greeting
+hai kak,greeting
+kamu itu bot apa,tentang_bot
+blubbot bisa bantu apa aja,tentang_bot
+ikan hias apa yang gampang dipelihara,pilih_ikan_pemula
+rekomendasi ikan hias buat pemula dong,pilih_ikan_pemula
+baru pertama pelihara ikan enaknya apa,pilih_ikan_pemula
+akuarium berapa liter yang cukup buat cupang,ukuran_akuarium
+ukuran akuarium untuk guppy berapa,ukuran_akuarium
+ikan makan berapa kali sehari,jadwal_makan
+kapan waktu kasih makan ikan,jadwal_makan
+jadwal makan ikan hias,jadwal_makan
+pakan yang bagus buat guppy apa,jenis_pakan
+boleh kasih cacing sutra ke ikan,jenis_pakan
+makanan ikan cupang apa aja,jenis_pakan
+seminggu berapa kali ganti air,ganti_air
+air akuarium perlu dikuras semua nggak,ganti_air
+boleh pakai air keran buat ikan,air_keran
+air pdam aman buat akuarium,air_keran
+kenapa air akuarium jadi keruh,air_keruh
+air akuarium berubah hijau kenapa,air_keruh
+suhu air yang pas buat cupang berapa,suhu_air
+air akuarium kepanasan gimana,suhu_air
+ikan megap megap di permukaan,ikan_megap_megap
+kenapa ikanku naik ke permukaan terus,ikan_megap_megap
+ikanku ada bintik putih di badan,bintik_putih
+ikan gosok gosok badan ke batu,bintik_putih
+cupang boleh digabung sama guppy,campur_ikan
+ikan saling berantem terus,campur_ikan
+dosis obat buat ikan berapa,tanya_obat_dosis
+garam ikan takarannya berapa,tanya_obat_dosis
+ikanku lesu banget,kondisi_ikan
+ikan lemes dan diam aja,kondisi_ikan
+makasih banyak ya bot,terima_kasih
+oke sip thanks,terima_kasih
 siapa presiden indonesia,fallback
-harga bensin hari ini,fallback
-resep nasi goreng,fallback
-cuaca besok gimana,fallback
+resep nasi goreng enak,fallback
+cara bayar ukt,fallback
+harga tiket pesawat ke bali,fallback

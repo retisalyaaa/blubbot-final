@@ -1,13 +1,13 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}BlubBot{% endblock %}</title>
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo.svg') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body>
+<body style="--primary: {% block color %}#6f86ff{% endblock %};">
   <!-- dekorasi akuarium: pasir, rumput laut, bintang, gelembung -->
   <div class="sand" aria-hidden="true"></div>
   {% for sisi in ["weed-l", "weed-r"] %}
@@ -20,7 +20,19 @@
   {% endfor %}
   <div class="sparkles" aria-hidden="true"></div>
   <div class="bubbles" aria-hidden="true"></div>
-  {% block content %}{% endblock %}
+
+  <header class="topbar">
+    <a href="{{ url_for('index') }}" class="brand">
+      <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="" class="brand-logo"> BlubBot
+    </a>
+    {% block header_extra %}{% endblock %}
+  </header>
+
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <script src="{{ url_for('static', filename='js/dekorasi.js') }}"></script>
   {% block scripts %}{% endblock %}
 </body>
 </html>

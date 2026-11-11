@@ -1,6 +1,11 @@
 {
   "id": "ikan",
+  "name": "Perawatan Ikan Hias",
   "bot_name": "BlubBot",
+  "avatar": "🐟",
+  "logo": "img/logo.svg",
+  "color": "#6f86ff",
+  "description": "Membantu pemula merawat ikan hias: pakan, kualitas air, akuarium, dan masalah umum pada ikan.",
   "subtitle": "Asisten perawatan ikan hias",
   "greeting": "Haiii! Aku BlubBot, temen ngobrol seputar ikan hias 🐟 Tanya aja soal pakan, air, akuarium, atau kondisi ikanmu ya!",
   "suggestions": [
@@ -10,8 +15,8 @@
     "Berapa suhu air yang pas?"
   ],
   "fallback": [
-    "Waduh, aku belum nangkep maksudmu nih 😅 Coba tanya soal pakan, ganti air, suhu, atau kondisi ikanmu, contohnya \"air akuarium keruh\".",
-    "Hehe, aku masih bingung nih. Coba tanya yang seputar ikan ya, kayak pakan, ganti air, suhu, atau \"ikan megap megap\"."
+    "Maaf, aku belum nangkep maksudmu nih 😅 Coba tanya soal pakan, ganti air, suhu, atau kondisi ikanmu, contohnya \"air akuarium keruh\".",
+    "Hehe, aku masih belum paham. Coba tanya yang seputar ikan ya, kayak pakan, ganti air, suhu, atau \"ikan megap megap\"."
   ],
   "intents": [
     {"tag": "greeting",

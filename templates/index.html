@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}BlubBot &middot; Asisten Perawatan Ikan Hias{% endblock %}
+
+{# Hanya ada satu tema chatbot, jadi tema pertama dipakai langsung sebagai tujuan tombol #}
+{% set t = themes | first %}
+
+{% block content %}
+<section class="landing">
+  <div class="hero landing-hero">
+    <img class="hero-logo" src="{{ url_for('static', filename=t.logo) if t.logo else '' }}" alt="Logo {{ t.bot_name }}: ikan lucu di dalam akuarium">
+    <p class="eyebrow">Halo, teman ikan!</p>
+    <h1>{{ t.bot_name }}</h1>
+    <p class="hero-sub">{{ t.subtitle }}</p>
+    <p class="landing-desc">{{ t.description }}</p>
+    <a class="btn-orange" href="{{ url_for('chat_page', theme_id=t.id) }}">Mulai tanya {{ t.bot_name }}</a>
+  </div>
+
+  <div class="landing-topics">
+    <h2>{{ t.bot_name }} bisa bantu soal apa?</h2>
+    <div class="topic-grid">
+      <div class="topic"><span aria-hidden="true">🍽️</span><strong>Pakan</strong><small>Jadwal dan jenis makanan</small></div>
+      <div class="topic"><span aria-hidden="true">💧</span><strong>Air</strong><small>Ganti air, keruh, dan suhu</small></div>
+      <div class="topic"><span aria-hidden="true">🐠</span><strong>Akuarium</strong><small>Ukuran dan memilih ikan</small></div>
+      <div class="topic"><span aria-hidden="true">🩺</span><strong>Kondisi ikan</strong><small>Bintik putih, lemas, megap-megap</small></div>
+    </div>
+  </div>
+</section>
+{% endblock %}

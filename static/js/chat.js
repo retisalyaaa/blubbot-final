@@ -1,109 +1,154 @@
-const box = document.getElementById("messages");
+// =====================================================================
+// Logika antarmuka chat: kirim pesan ke /api/chat dengan fetch()
+// lalu tampilkan balasan tanpa memuat ulang halaman.
+// (Hiasan gelembung & bintang ada di dekorasi.js)
+// =====================================================================
+const messagesEl = document.getElementById("messages");
 const form = document.getElementById("chat-form");
 const input = document.getElementById("chat-input");
-const avatarUrl = box.dataset.avatar;
+const btnClear = document.getElementById("btn-clear");
+const btnStart = document.getElementById("start-btn");
+const learnMode = document.getElementById("learn-mode");
 let sedangKirim = false;
 
-const tunggu = (ms) => new Promise((r) => setTimeout(r, ms));
-
-// hiasan akuarium: bintang berkilau dan gelembung naik
-(function buatDekorasi() {
-  const acak = (a, b) => a + Math.random() * (b - a);
-  const bintang = document.querySelector(".sparkles");
-  for (let i = 0; i < 8; i++) {
-    const s = document.createElement("i");
-    const ukuran = acak(8, 22);
-    s.className = "sparkle";
-    s.style.cssText = `left:${acak(0, 100)}%;top:${acak(0, 100)}%;` +
-      `width:${ukuran}px;height:${ukuran}px;animation-delay:${acak(0, 3)}s`;
-    bintang.appendChild(s);
-  }
-  const gelembung = document.querySelector(".bubbles");
-  for (let i = 0; i < 18; i++) {
-    const b = document.createElement("i");
-    const ukuran = acak(8, 38);
-    b.className = "bubble-fx";
-    b.style.cssText = `left:${acak(0, 100)}%;width:${ukuran}px;height:${ukuran}px;` +
-      `animation-duration:${acak(9, 18)}s;animation-delay:-${acak(0, 18)}s`;
-    gelembung.appendChild(b);
-  }
-})();
-
-function addMessage(who, text) {
+/** Tambahkan satu gelembung pesan ke layar. */
+function addMessage(sender, text, meta) {
   const row = document.createElement("div");
-  row.className = "row " + who;
-  if (who === "bot") {
-    const img = document.createElement("img");
-    img.className = "avatar sm";
-    img.src = avatarUrl;
-    img.alt = "";
-    row.appendChild(img);
+  row.className = `row ${sender}`;
+
+  if (sender === "bot") {
+    // logo tema bila ada, kalau tidak pakai emoji avatar
+    if (THEME.logo) {
+      const img = document.createElement("img");
+      img.className = "avatar sm";
+      img.src = THEME.logo;
+      img.alt = "";
+      row.appendChild(img);
+    } else {
+      const emoji = document.createElement("span");
+      emoji.className = "avatar sm emoji";
+      emoji.textContent = THEME.avatar;
+      row.appendChild(emoji);
+    }
   }
+
   const bubble = document.createElement("div");
   bubble.className = "bubble";
-  bubble.textContent = text; // textContent aman dari XSS
+  bubble.textContent = text;            // textContent, BUKAN innerHTML -> aman dari XSS
+
+  if (meta) {
+    const small = document.createElement("small");
+    small.className = "meta";
+    small.textContent = meta;
+    bubble.appendChild(small);
+  }
+
   row.appendChild(bubble);
-  box.appendChild(row);
-  box.scrollTop = box.scrollHeight;
-  return row;
+  messagesEl.appendChild(row);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+  return bubble;
 }
 
-// tiga titik "sedang mengetik"
+/** Tiga titik "sedang mengetik". */
 function showTyping() {
-  const row = addMessage("bot", "");
+  const bubble = addMessage("bot", "");
+  const row = bubble.parentElement;
   row.classList.add("typing");
-  const bubble = row.querySelector(".bubble");
   for (let i = 0; i < 3; i++) bubble.appendChild(document.createElement("span"));
   return row;
 }
 
+/** Mode belajar: tampilkan 3 kandidat intent teratas di bawah jawaban. */
+async function showCandidates(bubble, text) {
+  const res = await fetch("/api/explain", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message: text, theme: THEME.id }),
+  });
+  const data = await res.json();
+  const list = document.createElement("ol");
+  list.className = "candidates";
+  data.candidates.forEach((c) => {
+    const li = document.createElement("li");
+    const lolos = c.score >= data.threshold ? "lolos ambang" : "di bawah ambang";
+    li.textContent = `${c.intent} · ${c.score.toFixed(2)} (${lolos}) — pola “${c.pattern}”`;
+    list.appendChild(li);
+  });
+  bubble.appendChild(list);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+/** Kirim pesan ke server. */
 async function sendMessage(text) {
   if (sedangKirim) return;
   sedangKirim = true;
   addMessage("user", text);
   const typing = showTyping();
+
   try {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: text }),
+      body: JSON.stringify({ message: text, theme: THEME.id }),
     });
     const data = await res.json();
-    await tunggu(500); // jeda singkat biar terasa seperti mengetik
     typing.remove();
-    addMessage("bot", res.ok ? data.reply : data.error);
+
+    if (!res.ok) {
+      addMessage("bot", `⚠️ ${data.error}`);
+      return;
+    }
+    const meta = data.intent
+      ? `intent: ${data.intent} · skor ${data.score.toFixed(2)}`
+      : `tidak dikenali · skor ${data.score.toFixed(2)}`;
+    // info skor selalu disimpan di gelembung, tetapi hanya terlihat saat Mode belajar aktif (lihat CSS)
+    const bubble = addMessage("bot", data.reply, meta);
+    if (learnMode.checked) await showCandidates(bubble, text);
   } catch (err) {
     typing.remove();
-    addMessage("bot", "Gagal terhubung ke server.");
+    addMessage("bot", "⚠️ Gagal terhubung ke server.");
+    console.error(err);
   } finally {
     sedangKirim = false;
+    input.focus();
   }
 }
 
+/** Muat riwayat percakapan saat halaman dibuka. */
+async function loadHistory() {
+  const res = await fetch(`/api/history/${THEME.id}`);
+  const rows = await res.json();
+  if (rows.length === 0) {
+    addMessage("bot", THEME.greeting);
+    return;
+  }
+  rows.forEach((r) => addMessage(r.sender, r.text));
+}
+
+// ---- Event listener ------------------------------------------------
 form.addEventListener("submit", (e) => {
-  e.preventDefault(); // jangan muat ulang halaman
+  e.preventDefault();                   // cegah form memuat ulang halaman
   const text = input.value.trim();
-  if (!text) return;
+  if (!text) return;                    // pesan kosong diabaikan
   input.value = "";
   sendMessage(text);
 });
 
 document.querySelectorAll(".tip").forEach((tip) => {
-  tip.addEventListener("click", () => sendMessage(tip.dataset.q));
+  tip.addEventListener("click", () => sendMessage(tip.querySelector("span").textContent));
 });
 
-document.getElementById("start-btn").addEventListener("click", () => input.focus());
+btnStart.addEventListener("click", () => input.focus());
 
-document.getElementById("clear-btn").addEventListener("click", async () => {
-  await fetch("/api/history", { method: "DELETE" });
-  box.innerHTML = "";
-  addMessage("bot", box.dataset.greeting);
+// Mode belajar: centang -> skor muncul, hilangkan centang -> skor disembunyikan
+learnMode.addEventListener("change", () => {
+  messagesEl.classList.toggle("learn", learnMode.checked);
 });
 
-async function loadHistory() {
-  const res = await fetch("/api/history");
-  const rows = await res.json();
-  if (rows.length === 0) addMessage("bot", box.dataset.greeting);
-  rows.forEach((r) => addMessage(r.sender, r.text));
-}
+btnClear.addEventListener("click", async () => {
+  await fetch(`/api/history/${THEME.id}`, { method: "DELETE" });
+  messagesEl.innerHTML = "";
+  addMessage("bot", THEME.greeting);
+});
+
 loadHistory();

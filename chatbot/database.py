@@ -1,46 +1,85 @@
+"""Penyimpanan riwayat percakapan menggunakan SQLite (modul bawaan Python)."""
 import sqlite3
+from pathlib import Path
+
+SKEMA = """
+CREATE TABLE IF NOT EXISTS messages (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id  TEXT    NOT NULL,
+    theme       TEXT    NOT NULL,
+    sender      TEXT    NOT NULL CHECK (sender IN ('user', 'bot')),
+    text        TEXT    NOT NULL,
+    intent      TEXT,
+    score       REAL,
+    created_at  TIMESTAMP DEFAULT (datetime('now', 'localtime'))
+);
+CREATE INDEX IF NOT EXISTS idx_session_theme ON messages (session_id, theme);
+"""
 
 
 class ChatHistory:
-    def __init__(self, path="chat_history.db"):
-        self.path = path
-        self._run("""CREATE TABLE IF NOT EXISTS messages (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            session_id TEXT, sender TEXT, text TEXT,
-            intent TEXT, score REAL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
+    def __init__(self, db_path: str | Path):
+        self.db_path = str(db_path)
+        with self._connect() as conn:
+            conn.executescript(SKEMA)
 
-    def _run(self, sql, params=(), fetch=False):
-        conn = sqlite3.connect(self.path)
-        try:
-            with conn:  # commit otomatis, rollback kalau galat
-                cur = conn.execute(sql, params)
-                return cur.fetchall() if fetch else None
-        finally:
-            conn.close()
+    def _connect(self):
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row          # baris bisa diakses seperti dict
+        return conn
 
-    def add(self, session_id, sender, text, intent=None, score=None):
-        self._run(
-            "INSERT INTO messages (session_id, sender, text, intent, score) "
-            "VALUES (?, ?, ?, ?, ?)",
-            (session_id, sender, text, intent, score))
+    def add(self, session_id, theme, sender, text, intent=None, score=None):
+        sql = ("INSERT INTO messages (session_id, theme, sender, text, intent, score) "
+               "VALUES (?, ?, ?, ?, ?, ?)")    # parameter ? mencegah SQL injection
+        with self._connect() as conn:
+            conn.execute(sql, (session_id, theme, sender, text, intent, score))
 
-    def history(self, session_id):
-        rows = self._run(
-            "SELECT sender, text FROM messages WHERE session_id = ? ORDER BY id",
-            (session_id,), fetch=True)
-        return [{"sender": s, "text": t} for s, t in rows]
+    def get(self, session_id, theme, limit=50):
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT sender, text, intent, score, created_at FROM messages "
+                "WHERE session_id = ? AND theme = ? ORDER BY id DESC LIMIT ?",
+                (session_id, theme, limit),
+            ).fetchall()
+        return [dict(r) for r in reversed(rows)]
 
-    def clear(self, session_id):
-        self._run("DELETE FROM messages WHERE session_id = ?", (session_id,))
+    def clear(self, session_id, theme):
+        with self._connect() as conn:
+            conn.execute("DELETE FROM messages WHERE session_id = ? AND theme = ?",
+                         (session_id, theme))
 
-    def stats(self):
-        return self._run(
-            "SELECT COALESCE(intent, '(tidak dikenali)'), COUNT(*) FROM messages "
-            "WHERE sender = 'user' GROUP BY intent ORDER BY 2 DESC", fetch=True)
+    def stats(self, theme):
+        """Jumlah pertanyaan pengguna per intent (bahan evaluasi)."""
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT COALESCE(intent, '(tidak dikenali)') AS intent, COUNT(*) AS jumlah "
+                "FROM messages WHERE theme = ? AND sender = 'user' "
+                "GROUP BY intent ORDER BY jumlah DESC",
+                (theme,),
+            ).fetchall()
+        return [dict(r) for r in rows]
 
-    def unknown(self):
-        return self._run(
-            "SELECT text, score, created_at FROM messages "
-            "WHERE sender = 'user' AND intent IS NULL ORDER BY id DESC LIMIT 20",
-            fetch=True)
+    def unknown_questions(self, theme, limit=20):
+        """Pertanyaan pengguna terbaru yang tidak dikenali bot (kandidat pola baru)."""
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT text, score, created_at FROM messages "
+                "WHERE theme = ? AND sender = 'user' AND intent IS NULL "
+                "ORDER BY id DESC LIMIT ?",
+                (theme, limit),
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    def summary(self, theme):
+        """Ringkasan angka untuk halaman admin."""
+        with self._connect() as conn:
+            r = conn.execute(
+                "SELECT COUNT(*) AS total, "
+                "SUM(CASE WHEN intent IS NULL THEN 1 ELSE 0 END) AS gagal, "
+                "COUNT(DISTINCT session_id) AS sesi "
+                "FROM messages WHERE theme = ? AND sender = 'user'",
+                (theme,),
+            ).fetchone()
+        total, gagal = r["total"] or 0, r["gagal"] or 0
+        return {"total": total, "tidak_dikenali": gagal, "sesi": r["sesi"] or 0,
+                "persen_dikenali": round(100 * (total - gagal) / total, 1) if total else 0.0}

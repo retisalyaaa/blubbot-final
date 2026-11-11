@@ -1,73 +1,144 @@
+"""
+Aplikasi Web Chatbot Tematik dengan Flask (versi final).
+
+Jalankan:
+    python app.py
+lalu buka http://127.0.0.1:5000
+"""
 import os
 import uuid
+from pathlib import Path
 
-from flask import Flask, jsonify, render_template, request, session
+from flask import Flask, abort, jsonify, render_template, request, session
 
-from chatbot.database import ChatHistory
-from chatbot.engine import ChatbotEngine, load_theme
+from chatbot import ChatbotEngine, ChatHistory, load_themes
+
+BASE_DIR = Path(__file__).resolve().parent
 
 
-def create_app(config=None):
+def create_app(config: dict | None = None) -> Flask:
+    """Application factory: memudahkan konfigurasi berbeda untuk pengujian."""
     app = Flask(__name__)
     app.config.update(
-        SECRET_KEY=os.environ.get("SECRET_KEY", "ganti-ini-saat-deploy"),
+        SECRET_KEY=os.environ.get("SECRET_KEY", "ganti-dengan-kunci-rahasia"),
+        DATABASE=os.environ.get("DATABASE", str(BASE_DIR / "chat_history.db")),
+        THEMES_DIR=str(BASE_DIR / "themes"),
         THRESHOLD=float(os.environ.get("THRESHOLD", "0.45")),
-        ADMIN_KEY=os.environ.get("ADMIN_KEY", ""),
-        DATABASE=os.environ.get(
-            "DATABASE", os.path.join(app.root_path, "chat_history.db")),
-        THEME_FILE=os.path.join(app.root_path, "themes", "ikan.json"),
+        ADMIN_KEY=os.environ.get("ADMIN_KEY", ""),   # kosong = halaman admin terbuka
+        MAX_LEN=500,
     )
     if config:
         app.config.update(config)
 
-    theme = load_theme(app.config["THEME_FILE"])
-    bot = ChatbotEngine(theme, app.config["THRESHOLD"])
+    # Muat semua tema dan buat satu engine per tema
+    themes = load_themes(app.config["THEMES_DIR"])
+    engines = {tid: ChatbotEngine(t, app.config["THRESHOLD"]) for tid, t in themes.items()}
     history = ChatHistory(app.config["DATABASE"])
 
-    def sid():
+    def get_session_id() -> str:
+        """Setiap pengunjung mendapat ID sesi unik yang disimpan di cookie."""
         if "sid" not in session:
             session["sid"] = uuid.uuid4().hex
         return session["sid"]
 
-    def galat(pesan):
-        return jsonify({"error": pesan}), 400
+    def get_theme_or_404(theme_id: str) -> dict:
+        if theme_id not in themes:
+            abort(404, description=f"Tema '{theme_id}' tidak ditemukan")
+        return themes[theme_id]
 
-    @app.get("/")
+    def check_admin():
+        kunci = app.config["ADMIN_KEY"]
+        if kunci and request.args.get("key") != kunci:
+            abort(403, description="Kunci admin salah atau tidak ada")
+
+    # ------------------------------------------------------------------ #
+    # Halaman (mengembalikan HTML)
+    # ------------------------------------------------------------------ #
+    @app.route("/")
     def index():
+        return render_template("index.html", themes=themes.values())
+
+    @app.route("/chat/<theme_id>")
+    def chat_page(theme_id):
+        theme = get_theme_or_404(theme_id)
         return render_template("chat.html", theme=theme)
+
+    @app.route("/admin/<theme_id>")
+    def admin_page(theme_id):
+        check_admin()
+        theme = get_theme_or_404(theme_id)
+        return render_template(
+            "admin.html", theme=theme,
+            summary=history.summary(theme_id),
+            stats=history.stats(theme_id),
+            unknown=history.unknown_questions(theme_id),
+            threshold=app.config["THRESHOLD"],
+        )
+
+    # ------------------------------------------------------------------ #
+    # REST API (mengembalikan JSON)
+    # ------------------------------------------------------------------ #
+    @app.get("/api/themes")
+    def api_themes():
+        return jsonify([
+            {"id": t["id"], "name": t["name"], "description": t["description"]}
+            for t in themes.values()
+        ])
 
     @app.post("/api/chat")
     def api_chat():
-        data = request.get_json(silent=True)
-        if data is None:
-            return galat("Body harus berformat JSON")
+        data = request.get_json(silent=True) or {}
         message = str(data.get("message", "")).strip()
+        theme_id = data.get("theme", "")
+
+        if theme_id not in engines:
+            return jsonify({"error": "Tema tidak valid"}), 400
         if not message:
-            return galat("Pesan tidak boleh kosong")
-        if len(message) > 500:
-            return galat("Pesan maksimal 500 karakter")
-        hasil = bot.reply(message)
-        history.add(sid(), "user", message, hasil["intent"], hasil["score"])
-        history.add(sid(), "bot", hasil["reply"])
-        return jsonify(hasil)
+            return jsonify({"error": "Pesan tidak boleh kosong"}), 400
+        if len(message) > app.config["MAX_LEN"]:
+            return jsonify({"error": f"Pesan maksimal {app.config['MAX_LEN']} karakter"}), 400
 
-    @app.get("/api/history")
-    def api_history():
-        return jsonify(history.history(sid()))
+        sid = get_session_id()
+        result = engines[theme_id].reply(message)
 
-    @app.delete("/api/history")
-    def api_clear():
-        history.clear(sid())
-        return jsonify({"ok": True})
+        history.add(sid, theme_id, "user", message, result["intent"], result["score"])
+        history.add(sid, theme_id, "bot", result["reply"], result["intent"], result["score"])
+        return jsonify(result)
 
-    @app.get("/admin")
-    def admin():
-        key = app.config["ADMIN_KEY"]
-        if key and request.args.get("key") != key:
-            return "Kunci admin salah", 403
-        return render_template(
-            "admin.html", stats=history.stats(),
-            unknown=history.unknown(), threshold=bot.threshold)
+    @app.post("/api/explain")
+    def api_explain():
+        """Tiga kandidat intent teratas: untuk belajar melihat cara bot 'berpikir'."""
+        data = request.get_json(silent=True) or {}
+        theme_id = data.get("theme", "")
+        if theme_id not in engines:
+            return jsonify({"error": "Tema tidak valid"}), 400
+        message = str(data.get("message", ""))[: app.config["MAX_LEN"]]
+        return jsonify({"threshold": app.config["THRESHOLD"],
+                        "candidates": engines[theme_id].explain(message)})
+
+    @app.get("/api/history/<theme_id>")
+    def api_history(theme_id):
+        get_theme_or_404(theme_id)
+        return jsonify(history.get(get_session_id(), theme_id))
+
+    @app.delete("/api/history/<theme_id>")
+    def api_clear_history(theme_id):
+        get_theme_or_404(theme_id)
+        history.clear(get_session_id(), theme_id)
+        return jsonify({"status": "ok"})
+
+    @app.get("/api/stats/<theme_id>")
+    def api_stats(theme_id):
+        check_admin()
+        get_theme_or_404(theme_id)
+        return jsonify(history.stats(theme_id))
+
+    @app.errorhandler(403)
+    @app.errorhandler(404)
+    def not_found(err):
+        if request.path.startswith("/api/"):
+            return jsonify({"error": err.description}), err.code
+        return render_template("404.html", message=err.description, code=err.code), err.code
 
     return app
 
