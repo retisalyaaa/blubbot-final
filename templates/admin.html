@@ -1,24 +1,26 @@
 {% extends "base.html" %}
 {% block title %}Statistik BlubBot{% endblock %}
 {% block content %}
-<h1>Statistik BlubBot</h1>
-<p>Ambang saat ini: {{ threshold }}</p>
+<main class="panel">
+  <h1>Statistik BlubBot</h1>
+  <p>Ambang saat ini: {{ threshold }}</p>
 
-<h2>Pertanyaan per intent</h2>
-<table>
-  <tr><th>Intent</th><th>Jumlah</th></tr>
-  {% for nama, jumlah in stats %}
-  <tr><td>{{ nama }}</td><td>{{ jumlah }}</td></tr>
-  {% endfor %}
-</table>
+  <h2>Pertanyaan per intent</h2>
+  <table>
+    <tr><th>Intent</th><th>Jumlah</th></tr>
+    {% for nama, jumlah in stats %}
+    <tr><td>{{ nama }}</td><td>{{ jumlah }}</td></tr>
+    {% endfor %}
+  </table>
 
-<h2>Pertanyaan yang tidak dikenali</h2>
-<p>Salin kalimat ini sebagai pola baru di themes/ikan.json.</p>
-<table>
-  <tr><th>Pertanyaan</th><th>Skor</th><th>Waktu</th></tr>
-  {% for teks, skor, waktu in unknown %}
-  <tr><td>{{ teks }}</td><td>{{ skor }}</td><td>{{ waktu }}</td></tr>
-  {% endfor %}
-</table>
-<p><a href="/">Kembali ke chat</a></p>
+  <h2>Pertanyaan yang tidak dikenali</h2>
+  <p>Salin kalimat ini sebagai pola baru di themes/ikan.json.</p>
+  <table>
+    <tr><th>Pertanyaan</th><th>Skor</th><th>Waktu</th></tr>
+    {% for teks, skor, waktu in unknown %}
+    <tr><td>{{ teks }}</td><td>{{ skor }}</td><td>{{ waktu }}</td></tr>
+    {% endfor %}
+  </table>
+  <p><a href="/">Kembali ke chat</a></p>
+</main>
 {% endblock %}

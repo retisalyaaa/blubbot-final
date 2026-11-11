@@ -4,12 +4,23 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}BlubBot{% endblock %}</title>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo.svg') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-  <main class="card">
-    {% block content %}{% endblock %}
-  </main>
+  <!-- dekorasi akuarium: pasir, rumput laut, bintang, gelembung -->
+  <div class="sand" aria-hidden="true"></div>
+  {% for sisi in ["weed-l", "weed-r"] %}
+  <svg class="weed {{ sisi }}" viewBox="0 0 160 360" aria-hidden="true">
+    <path d="M28 360 C4 300 52 250 26 190 S44 90 30 50" stroke="#35b27d" stroke-width="13"/>
+    <path d="M62 360 C40 310 86 270 62 220 S76 140 66 110" stroke="#4fd1a1" stroke-width="11"/>
+    <path d="M96 360 C78 320 116 290 98 250 S108 200 100 180" stroke="#2e9d78" stroke-width="10"/>
+    <path d="M128 360 C112 330 140 310 128 285" stroke="#6be0b4" stroke-width="9"/>
+  </svg>
+  {% endfor %}
+  <div class="sparkles" aria-hidden="true"></div>
+  <div class="bubbles" aria-hidden="true"></div>
+  {% block content %}{% endblock %}
   {% block scripts %}{% endblock %}
 </body>
 </html>

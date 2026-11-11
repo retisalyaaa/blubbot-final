@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Ikan lucu di dalam akuarium">
+  <style>
+    .bob{animation:bob 3s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+    .tail{animation:wag 1.2s ease-in-out infinite;transform-box:fill-box;transform-origin:right center}
+    .b1,.b2,.b3{animation:rise 4s ease-in infinite}
+    .b2{animation-delay:1.3s}.b3{animation-delay:2.6s}
+    @keyframes bob{0%,100%{transform:translateY(-3px)}50%{transform:translateY(4px)}}
+    @keyframes wag{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+    @keyframes rise{0%{transform:translateY(0);opacity:0}15%{opacity:.9}100%{transform:translateY(-52px);opacity:0}}
+    @media (prefers-reduced-motion:reduce){.bob,.tail,.b1,.b2,.b3{animation:none}}
+  </style>
+  <ellipse cx="100" cy="188" rx="70" ry="7" fill="#27325f" opacity=".12"/>
+  <rect x="22" y="44" width="156" height="136" rx="26" fill="#e6f6ff" stroke="#4a63e0" stroke-width="6"/>
+  <path d="M28 76 Q48 68 68 76 T108 76 T148 76 T172 74 V150 H28 Z" fill="#8fd6ff"/>
+  <path d="M28 150 H172 V158 Q172 174 156 174 H44 Q28 174 28 158 Z" fill="#f7dca8"/>
+  <circle cx="52" cy="162" r="3" fill="#e8c27f"/><circle cx="140" cy="165" r="3.5" fill="#e8c27f"/><circle cx="110" cy="168" r="2.5" fill="#e8c27f"/>
+  <path d="M46 160 Q38 140 48 124 Q54 140 50 160 Z" fill="#3fc08a"/>
+  <path d="M154 162 Q164 142 152 120 Q144 142 150 162 Z" fill="#35b27d"/>
+  <rect x="14" y="32" width="172" height="18" rx="9" fill="#ff9a3c"/>
+  <g class="bob">
+    <path class="tail" d="M70 108 L42 88 Q36 108 42 128 Z" fill="#ff7a1f"/>
+    <path d="M92 84 Q106 64 122 84 Z" fill="#ff7a1f"/>
+    <ellipse cx="102" cy="108" rx="36" ry="27" fill="#ffa13d"/>
+    <path d="M88 84 Q80 108 88 132" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" opacity=".85"/>
+    <circle cx="122" cy="102" r="10" fill="#fff"/><circle cx="125" cy="103" r="5.5" fill="#27325f"/><circle cx="127" cy="101" r="2" fill="#fff"/>
+    <circle cx="116" cy="118" r="5" fill="#ff7f9c" opacity=".6"/>
+    <path d="M122 116 Q130 123 136 114" stroke="#27325f" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M100 120 Q108 134 120 132 Q114 122 100 120 Z" fill="#ff7a1f"/>
+  </g>
+  <circle class="b1" cx="150" cy="140" r="5" fill="#fff" fill-opacity=".7" stroke="#fff"/>
+  <circle class="b2" cx="62" cy="136" r="4" fill="#fff" fill-opacity=".7" stroke="#fff"/>
+  <circle class="b3" cx="134" cy="150" r="3" fill="#fff" fill-opacity=".7" stroke="#fff"/>
+  <path d="M40 62 Q40 54 48 54" stroke="#fff" stroke-width="5" stroke-linecap="round" fill="none" opacity=".8"/>
+</svg>
