@@ -67,6 +67,7 @@
     logo: {{ logo | tojson }},
     greeting: {{ theme.greeting | tojson }}
   };
+  const HISTORY = {{ history | tojson }};
 </script>
 <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 {% endblock %}
