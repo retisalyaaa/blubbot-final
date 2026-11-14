@@ -9,6 +9,7 @@ const input = document.getElementById("chat-input");
 const btnClear = document.getElementById("btn-clear");
 const btnStart = document.getElementById("start-btn");
 const learnMode = document.getElementById("learn-mode");
+const placeholderAwal = input.placeholder;
 let sedangKirim = false;
 
 /** Tambahkan satu gelembung pesan ke layar. */
@@ -49,15 +50,6 @@ function addMessage(sender, text, meta) {
   return bubble;
 }
 
-/** Tiga titik "sedang mengetik". */
-function showTyping() {
-  const bubble = addMessage("bot", "");
-  const row = bubble.parentElement;
-  row.classList.add("typing");
-  for (let i = 0; i < 3; i++) bubble.appendChild(document.createElement("span"));
-  return row;
-}
-
 /** Mode belajar: tampilkan 3 kandidat intent teratas di bawah jawaban. */
 async function showCandidates(bubble, text) {
   const res = await fetch("/api/explain", {
@@ -83,7 +75,8 @@ async function sendMessage(text) {
   if (sedangKirim) return;
   sedangKirim = true;
   addMessage("user", text);
-  const typing = showTyping();
+  // penanda menunggu yang ringan: cukup ganti teks placeholder (tanpa animasi)
+  input.placeholder = "BlubBot lagi mikir...";
 
   try {
     const res = await fetch("/api/chat", {
@@ -92,7 +85,6 @@ async function sendMessage(text) {
       body: JSON.stringify({ message: text, theme: THEME.id }),
     });
     const data = await res.json();
-    typing.remove();
 
     if (!res.ok) {
       addMessage("bot", `⚠️ ${data.error}`);
@@ -105,23 +97,21 @@ async function sendMessage(text) {
     const bubble = addMessage("bot", data.reply, meta);
     if (learnMode.checked) await showCandidates(bubble, text);
   } catch (err) {
-    typing.remove();
     addMessage("bot", "⚠️ Gagal terhubung ke server.");
     console.error(err);
   } finally {
     sedangKirim = false;
+    input.placeholder = placeholderAwal;
     input.focus();
   }
 }
 
-/** Muat riwayat percakapan saat halaman dibuka. */
+/** Tampilkan riwayat percakapan. Datanya (HISTORY) sudah dikirim server bersama halaman,
+ *  jadi langsung muncul tanpa menunggu request tambahan. */
 async function loadHistory() {
   const res = await fetch(`/api/history/${THEME.id}`);
   const rows = await res.json();
-  if (rows.length === 0) {
-    addMessage("bot", THEME.greeting);
-    return;
-  }
+  if (rows.length === 0) { addMessage("bot", THEME.greeting); return; }
   rows.forEach((r) => addMessage(r.sender, r.text));
 }
 

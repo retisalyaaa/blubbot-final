@@ -1,4 +1,4 @@
-// Hiasan akuarium: bintang berkilau dan gelembung diam (dipakai semua halaman)
+// Hiasan akuarium: bintang dan gelembung diam (dipakai semua halaman)
 (function buatDekorasi() {
   const acak = (a, b) => a + Math.random() * (b - a);
   const bintang = document.querySelector(".sparkles");
@@ -6,8 +6,9 @@
     const s = document.createElement("i");
     const ukuran = acak(8, 22);
     s.className = "sparkle";
+    // animation:none -> bintang diam, tidak berkedip
     s.style.cssText = `left:${acak(0, 100)}%;top:${acak(0, 100)}%;` +
-      `width:${ukuran}px;height:${ukuran}px;animation-delay:${acak(0, 3)}s`;
+      `width:${ukuran}px;height:${ukuran}px;animation:none`;
     bintang.appendChild(s);
   }
   const gelembung = document.querySelector(".bubbles");

@@ -61,7 +61,8 @@ def create_app(config: dict | None = None) -> Flask:
     @app.route("/chat/<theme_id>")
     def chat_page(theme_id):
         theme = get_theme_or_404(theme_id)
-        return render_template("chat.html", theme=theme)
+        return render_template("chat.html", theme=theme,
+                            history=history.get(get_session_id(), theme_id))
 
     @app.route("/admin/<theme_id>")
     def admin_page(theme_id):
