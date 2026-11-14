@@ -59,15 +59,8 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
-  // Data dari server (Jinja2) diteruskan ke JavaScript dengan filter tojson
-  const THEME = {
-    id: {{ theme.id | tojson }},
-    avatar: {{ theme.avatar | tojson }},
-    logo: {{ logo | tojson }},
-    greeting: {{ theme.greeting | tojson }}
-  };
-  const HISTORY = {{ history | tojson }};
-</script>
+<div id="app-data" hidden
+     data-theme='{{ {"id": theme.id, "avatar": theme.avatar, "logo": logo, "greeting": theme.greeting} | tojson }}'
+     data-history='{{ history | tojson }}'></div>
 <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 {% endblock %}
